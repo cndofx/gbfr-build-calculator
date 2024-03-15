@@ -9,6 +9,10 @@ fn main() {
             Sigil::new_single(Trait::DMGCap, 5),
             Sigil::new_single(Trait::DMGCap, 10),
             Sigil::new_single(Trait::DMGCap, 15),
+            Sigil::new_single(Trait::WarElemental, 15),
+            Sigil::new_single(Trait::PotionHoarder, 11),
+            Sigil::new_single(Trait::PotionHoarder, 6),
+            Sigil::new_single(Trait::WeakPointDMG, 7),
         ],
         wrightstones: vec![Wrightstone {
             trait1: Trait::WeakPointDMG,
@@ -20,15 +24,27 @@ fn main() {
         }],
     };
 
+    // let query = SearchQuery {
+    //     desired_traits: vec![
+    //         (Trait::DMGCap, 22),
+    //         (Trait::WeakPointDMG, 16),
+    //         (Trait::WarElemental, 15),
+    //         (Trait::PotionHoarder, 15),
+    //     ],
+    //     sigil_slots: 10,
+    // };
+
     let query = SearchQuery {
-        desired_skills: vec![
-            (Trait::DMGCap, 22),
-            (Trait::WeakPointDMG, 16),
-            (Trait::WarElemental, 15),
-            (Trait::PotionHoarder, 15),
+        desired_traits: vec![
+            (Trait::DMGCap, 17),
+            (Trait::WeakPointDMG, 7),
+            // (Trait::WarElemental, 15),
+            // (Trait::PotionHoarder, 15),
         ],
-        sigil_slots: 12,
+        sigil_slots: 4,
     };
 
     let results = BasicSolver.search(&pool, &query);
+    dbg!(&results);
+    dbg!(&results.len());
 }

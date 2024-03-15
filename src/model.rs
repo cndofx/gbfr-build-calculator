@@ -1,24 +1,29 @@
+#[derive(Debug)]
 pub struct SearchQuery {
-    pub desired_skills: Vec<(Trait, u8)>,
+    pub desired_traits: Vec<(Trait, u8)>,
     pub sigil_slots: u8,
 }
 
+#[derive(Debug, Clone)]
 pub struct SearchPool {
     pub sigils: Vec<Sigil>,
     pub wrightstones: Vec<Wrightstone>,
 }
 
+#[derive(Debug)]
 pub struct SearchResult {
     pub sigils: Vec<Sigil>,
     pub wrightstone: Option<Wrightstone>,
 }
 
+#[derive(Debug, Clone)]
 pub struct Sigil {
     pub level: u8,
     pub trait1: Trait,
     pub trait2: Option<Trait>,
 }
 
+#[derive(Debug, Clone)]
 pub struct Wrightstone {
     pub trait1: Trait,
     pub trait2: Option<Trait>,
@@ -28,6 +33,7 @@ pub struct Wrightstone {
     pub trait3_level: u8,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Trait {
     Aegis,
     ATKDownResistance,
