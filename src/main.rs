@@ -24,7 +24,12 @@ fn main() {
         wrightstones,
     };
 
-    let results = BasicSolver.search(pool, &query);
-    dbg!(&results);
+    let mut results = BasicSolver.search(pool, &query);
+    results.sort_by_cached_key(|res| res.total_trait_level());
+    for result in &results {
+        dbg!(result);
+        dbg!(result.total_trait_level());
+        println!("\n\n");
+    }
     dbg!(&results.len());
 }

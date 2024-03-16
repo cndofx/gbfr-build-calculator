@@ -1,4 +1,7 @@
-use std::{collections::HashMap, str::FromStr};
+use std::{
+    collections::{HashMap, HashSet},
+    str::FromStr,
+};
 
 #[derive(Debug, PartialEq)]
 pub struct SearchQuery {
@@ -162,6 +165,87 @@ pub enum Trait {
     // head start
 }
 
+impl SearchResult {
+    pub fn trait_level(&self, t: Trait) -> u16 {
+        let mut sum = 0;
+
+        for sigil in &self.sigils {
+            let (t1, l1) = sigil.trait1;
+            if t1 == t {
+                sum += l1 as u16;
+            }
+
+            if let Some((t2, l2)) = sigil.trait2 {
+                if t2 == t {
+                    sum += l2 as u16;
+                }
+            }
+        }
+
+        if let Some(Wrightstone {
+            trait1,
+            trait2,
+            trait3,
+        }) = &self.wrightstone
+        {
+            let (t1, l1) = trait1;
+            if *t1 == t {
+                sum += *l1 as u16;
+            }
+
+            if let Some((t2, l2)) = trait2 {
+                if *t2 == t {
+                    sum += *l2 as u16;
+                }
+            }
+
+            if let Some((t3, l3)) = trait3 {
+                if *t3 == t {
+                    sum += *l3 as u16;
+                }
+            }
+        }
+
+        sum
+    }
+
+    pub fn traits(&self) -> Vec<Trait> {
+        let mut traits = HashSet::new();
+
+        for sigil in &self.sigils {
+            let (t1, _) = sigil.trait1;
+            traits.insert(t1);
+            if let Some((t2, _)) = sigil.trait2 {
+                traits.insert(t2);
+            }
+        }
+
+        if let Some(Wrightstone {
+            trait1,
+            trait2,
+            trait3,
+        }) = &self.wrightstone
+        {
+            let (t1, _) = trait1;
+            traits.insert(*t1);
+
+            if let Some((t2, _)) = trait2 {
+                traits.insert(*t2);
+            }
+
+            if let Some((t3, _)) = trait3 {
+                traits.insert(*t3);
+            }
+        }
+
+        traits.iter().copied().collect()
+    }
+
+    pub fn total_trait_level(&self) -> u16 {
+        self.traits().into_iter().map(|t| self.trait_level(t)).sum()
+    }
+}
+
 impl Sigil {
     pub fn new_single(trait1: Trait, level: u8) -> Self {
         Sigil {
@@ -169,6 +253,14 @@ impl Sigil {
             trait2: None,
         }
     }
+
+    // pub fn trait_level(&self, t: Trait) -> u8 {
+    //     let mut sum = 0;
+    //     // if self.trait1.0 == t {
+    //     //     sum += self.trait1.1
+    //     // }
+    //     let (t1, l1) =
+    // }
 }
 
 impl FromStr for Trait {
