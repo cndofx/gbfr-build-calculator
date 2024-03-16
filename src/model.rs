@@ -1,8 +1,7 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, str::FromStr};
 
 #[derive(Debug)]
 pub struct SearchQuery {
-    // pub desired_traits: Vec<(Trait, u8)>,
     pub desired_traits: HashMap<Trait, u8>,
     pub sigil_slots: u8,
 }
@@ -19,30 +18,28 @@ pub struct SearchResult {
     pub wrightstone: Option<Wrightstone>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Sigil {
-    pub level: u8,
-    pub trait1: Trait,
-    pub trait2: Option<Trait>,
+    pub trait1: (Trait, u8),
+    pub trait2: Option<(Trait, u8)>,
 }
 
 #[derive(Debug, Clone)]
 pub struct Wrightstone {
-    pub trait1: Trait,
-    pub trait2: Option<Trait>,
-    pub trait3: Option<Trait>,
-    pub trait1_level: u8,
-    pub trait2_level: u8,
-    pub trait3_level: u8,
+    pub trait1: (Trait, u8),
+    pub trait2: Option<(Trait, u8)>,
+    pub trait3: Option<(Trait, u8)>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Trait {
     Aegis,
+    Alpha,
     ATKDownResistance,
     ATK,
     Autorevive,
     Berserker,
+    Beta,
     BlightResistance,
     BreakAssassin,
     BurnResistance,
@@ -79,6 +76,7 @@ pub enum Trait {
     FlightOverFight,
     FoundersStrategy,
     FoundersTruth,
+    Gamma,
     Garrison,
     GlaciateResistance,
     GlassCannon,
@@ -167,9 +165,35 @@ pub enum Trait {
 impl Sigil {
     pub fn new_single(trait1: Trait, level: u8) -> Self {
         Sigil {
-            level,
-            trait1,
+            trait1: (trait1, level),
             trait2: None,
+        }
+    }
+}
+
+impl FromStr for Trait {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        use Trait as T;
+        match s {
+            "Hero's Creed" => Ok(T::HerosCreed),
+            "Hero's Will" => Ok(T::HerosWill),
+            "Alpha" => Ok(T::Alpha),
+            "Beta" => Ok(T::Beta),
+            "Gamma" => Ok(T::Gamma),
+            "War Elemental" => Ok(T::WarElemental),
+            "Supplementary DMG" => Ok(T::SupplementaryDamage),
+            "Aegis" => Ok(T::Aegis),
+            "Potion Hoarder" => Ok(T::PotionHoarder),
+            "Tyranny" => Ok(T::Tyranny),
+            "Quick Cooldown" => Ok(T::QuickCooldown),
+            "DMG Cap" => Ok(T::DMGCap),
+            "Improved Guard" => Ok(T::ImprovedGuard),
+            "Critical Hit Rate" => Ok(T::CriticalHitRate),
+            "Autorevive" => Ok(T::Autorevive),
+            "Drain" => Ok(T::Drain),
+            _ => Err("invalid trait name"),
         }
     }
 }

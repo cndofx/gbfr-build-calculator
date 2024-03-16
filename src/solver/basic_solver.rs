@@ -32,8 +32,8 @@ fn filter_pool(pool: SearchPool, query: &SearchQuery) -> SearchPool {
         .filter(|sigil| {
             let trait1 = Some(sigil.trait1);
             let trait2 = sigil.trait2;
-            trait1.is_some_and(|t| is_desired_trait(t, query))
-                || trait2.is_some_and(|t| is_desired_trait(t, query))
+            trait1.is_some_and(|(t, _)| is_desired_trait(t, query))
+                || trait2.is_some_and(|(t, _)| is_desired_trait(t, query))
         })
         .collect();
 
@@ -43,9 +43,9 @@ fn filter_pool(pool: SearchPool, query: &SearchQuery) -> SearchPool {
             let trait1 = Some(stone.trait1);
             let trait2 = stone.trait2;
             let trait3 = stone.trait3;
-            trait1.is_some_and(|t| is_desired_trait(t, query))
-                || trait2.is_some_and(|t| is_desired_trait(t, query))
-                || trait3.is_some_and(|t| is_desired_trait(t, query))
+            trait1.is_some_and(|(t, _)| is_desired_trait(t, query))
+                || trait2.is_some_and(|(t, _)| is_desired_trait(t, query))
+                || trait3.is_some_and(|(t, _)| is_desired_trait(t, query))
         })
         .collect();
 
@@ -63,16 +63,6 @@ fn all_combinations(pool: SearchPool, query: &SearchQuery) -> Vec<SearchResult> 
         wrightstones,
     } = pool;
 
-    // let combinations = sigils
-    //     .into_iter()
-    //     .combinations(num_sigils)
-    //     .cartesian_product(wrightstones.into_iter())
-    //     .map(|(sigils, wrightstone)| SearchResult {
-    //         sigils,
-    //         wrightstone: Some(wrightstone),
-    //     })
-    //     .collect::<Vec<_>>();
-
     let combinations = if wrightstones.len() > 0 {
         sigils
             .into_iter()
@@ -84,7 +74,6 @@ fn all_combinations(pool: SearchPool, query: &SearchQuery) -> Vec<SearchResult> 
             })
             .collect()
     } else {
-        // sigilts.into_iter().
         sigils
             .into_iter()
             .combinations(num_sigils)
@@ -101,15 +90,11 @@ fn all_combinations(pool: SearchPool, query: &SearchQuery) -> Vec<SearchResult> 
 fn is_valid_combination(combo: &SearchResult, query: &SearchQuery) -> bool {
     let mut traits: HashMap<Trait, u8> = HashMap::new();
     for sigil in combo.sigils.iter() {
-        traits
-            .entry(sigil.trait1)
-            .and_modify(|x| *x += sigil.level)
-            .or_insert(sigil.level);
+        let (t1, l1) = sigil.trait1;
+        traits.entry(t1).and_modify(|x| *x += l1).or_insert(l1);
         if let Some(trait2) = sigil.trait2 {
-            traits
-                .entry(trait2)
-                .and_modify(|x| *x += sigil.level)
-                .or_insert(sigil.level);
+            let (t2, l2) = trait2;
+            traits.entry(t2).and_modify(|x| *x += l2).or_insert(l2);
         }
     }
 
