@@ -1,5 +1,6 @@
 use std::{
     collections::{HashMap, HashSet},
+    fmt::Display,
     str::FromStr,
 };
 
@@ -253,14 +254,31 @@ impl Sigil {
             trait2: None,
         }
     }
+}
 
-    // pub fn trait_level(&self, t: Trait) -> u8 {
-    //     let mut sum = 0;
-    //     // if self.trait1.0 == t {
-    //     //     sum += self.trait1.1
-    //     // }
-    //     let (t1, l1) =
-    // }
+impl Display for Sigil {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let (t1, l1) = self.trait1;
+        if let Some((t2, l2)) = self.trait2 {
+            write!(f, "[{t1:?} {l1} + {t2:?} {l2}]")
+        } else {
+            write!(f, "[{t1:?} {l1}]")
+        }
+    }
+}
+
+impl Display for Wrightstone {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let (t1, l1) = self.trait1;
+        write!(f, "[{t1:?} {l1}")?;
+        if let Some((t2, l2)) = self.trait2 {
+            write!(f, " + {t2:?} {l2}")?;
+        }
+        if let Some((t3, l3)) = self.trait3 {
+            write!(f, " + {t3:?} {l3}")?;
+        }
+        write!(f, "]")
+    }
 }
 
 impl FromStr for Trait {

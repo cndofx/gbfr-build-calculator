@@ -12,7 +12,7 @@ impl Solver for BasicSolver {
     fn search(&self, pool: SearchPool, query: &SearchQuery) -> Vec<SearchResult> {
         let filtered_pool = filter_pool(pool, query);
         let combinations = all_combinations(filtered_pool, query);
-        println!("{} combinations to check", combinations.len());
+        println!("Checking {} combinations...", combinations.len());
         let valid = combinations
             .into_iter()
             .filter(|c| is_valid_combination(c, query))
