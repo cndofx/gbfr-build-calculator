@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use gbfr_build_calculator::model::{SearchPool, SearchQuery, Sigil, Trait, Wrightstone};
 use gbfr_build_calculator::solver::{BasicSolver, Solver};
 
@@ -5,8 +7,18 @@ fn main() {
     let pool = SearchPool {
         sigils: vec![
             Sigil::new_single(Trait::DMGCap, 1),
-            Sigil::new_single(Trait::DMGCap, 2),
-            Sigil::new_single(Trait::DMGCap, 5),
+            Sigil::new_single(Trait::DMGCap, 1),
+            Sigil::new_single(Trait::DMGCap, 1),
+            Sigil::new_single(Trait::DMGCap, 1),
+            Sigil::new_single(Trait::DMGCap, 1),
+            Sigil::new_single(Trait::DMGCap, 1),
+            Sigil::new_single(Trait::DMGCap, 1),
+            Sigil::new_single(Trait::DMGCap, 1),
+            Sigil::new_single(Trait::DMGCap, 1),
+            Sigil::new_single(Trait::DMGCap, 1),
+            Sigil::new_single(Trait::DMGCap, 1),
+            Sigil::new_single(Trait::DMGCap, 1),
+            Sigil::new_single(Trait::DMGCap, 10),
             Sigil::new_single(Trait::DMGCap, 10),
             Sigil::new_single(Trait::DMGCap, 15),
             Sigil::new_single(Trait::WarElemental, 15),
@@ -14,14 +26,15 @@ fn main() {
             Sigil::new_single(Trait::PotionHoarder, 6),
             Sigil::new_single(Trait::WeakPointDMG, 7),
         ],
-        wrightstones: vec![Wrightstone {
-            trait1: Trait::WeakPointDMG,
-            trait2: Some(Trait::ImprovedHealing),
-            trait3: Some(Trait::HP),
-            trait1_level: 10,
-            trait2_level: 6,
-            trait3_level: 5,
-        }],
+        wrightstones: vec![],
+        // wrightstones: vec![Wrightstone {
+        //     trait1: Trait::WeakPointDMG,
+        //     trait2: Some(Trait::ImprovedHealing),
+        //     trait3: Some(Trait::HP),
+        //     trait1_level: 10,
+        //     trait2_level: 6,
+        //     trait3_level: 5,
+        // }],
     };
 
     // let query = SearchQuery {
@@ -35,16 +48,16 @@ fn main() {
     // };
 
     let query = SearchQuery {
-        desired_traits: vec![
+        desired_traits: HashMap::from([
             (Trait::DMGCap, 17),
             (Trait::WeakPointDMG, 7),
             // (Trait::WarElemental, 15),
             // (Trait::PotionHoarder, 15),
-        ],
-        sigil_slots: 4,
+        ]),
+        sigil_slots: 3,
     };
 
-    let results = BasicSolver.search(&pool, &query);
+    let results = BasicSolver.search(pool, &query);
     dbg!(&results);
     dbg!(&results.len());
 }

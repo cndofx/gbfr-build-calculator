@@ -7,5 +7,5 @@ mod basic_solver;
 pub use basic_solver::BasicSolver;
 
 pub trait Solver {
-    fn search(&self, pool: &SearchPool, query: &SearchQuery) -> Vec<SearchResult>;
+    fn search(&self, pool: SearchPool, query: &SearchQuery) -> Vec<SearchResult>;
 }

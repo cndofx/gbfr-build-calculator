@@ -1,6 +1,9 @@
+use std::collections::HashMap;
+
 #[derive(Debug)]
 pub struct SearchQuery {
-    pub desired_traits: Vec<(Trait, u8)>,
+    // pub desired_traits: Vec<(Trait, u8)>,
+    pub desired_traits: HashMap<Trait, u8>,
     pub sigil_slots: u8,
 }
 
