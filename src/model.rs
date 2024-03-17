@@ -16,7 +16,7 @@ pub struct SearchPool {
     pub wrightstones: Vec<Wrightstone>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SearchResult {
     pub sigils: Vec<Sigil>,
     pub wrightstone: Option<Wrightstone>,
