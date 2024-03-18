@@ -1,42 +1,19 @@
-use std::{
-    collections::{HashMap, HashSet},
-    fmt::Display,
-    str::FromStr,
-};
+use std::collections::hash_map::Iter as HashMapIter;
+use std::{collections::HashMap, fmt::Display, str::FromStr};
 
 #[derive(Debug, PartialEq)]
-pub struct SearchQuery {
-    pub desired_traits: HashMap<Trait, u8>,
-    pub sigil_slots: u8,
-}
-
-#[derive(Debug, Clone)]
-pub struct SearchPool {
-    pub sigils: Vec<Sigil>,
-    pub wrightstones: Vec<Wrightstone>,
-}
-
-#[derive(Debug, Clone)]
-pub struct SearchResult {
-    pub sigils: Vec<Sigil>,
-    pub wrightstone: Option<Wrightstone>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct Sigil {
-    pub trait1: (Trait, u8),
-    pub trait2: Option<(Trait, u8)>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct Wrightstone {
-    pub trait1: (Trait, u8),
-    pub trait2: Option<(Trait, u8)>,
-    pub trait3: Option<(Trait, u8)>,
+pub struct TraitSet {
+    traits: HashMap<TraitKind, u16>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Trait {
+pub struct Trait {
+    pub kind: TraitKind,
+    pub level: u8,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum TraitKind {
     Aegis,
     Alpha,
     ATKDownResistance,
@@ -166,126 +143,72 @@ pub enum Trait {
     // head start
 }
 
-impl SearchResult {
-    pub fn trait_level(&self, t: Trait) -> u16 {
-        let mut sum = 0;
-
-        for sigil in &self.sigils {
-            let (t1, l1) = sigil.trait1;
-            if t1 == t {
-                sum += l1 as u16;
-            }
-
-            if let Some((t2, l2)) = sigil.trait2 {
-                if t2 == t {
-                    sum += l2 as u16;
-                }
-            }
-        }
-
-        if let Some(Wrightstone {
-            trait1,
-            trait2,
-            trait3,
-        }) = &self.wrightstone
-        {
-            let (t1, l1) = trait1;
-            if *t1 == t {
-                sum += *l1 as u16;
-            }
-
-            if let Some((t2, l2)) = trait2 {
-                if *t2 == t {
-                    sum += *l2 as u16;
-                }
-            }
-
-            if let Some((t3, l3)) = trait3 {
-                if *t3 == t {
-                    sum += *l3 as u16;
-                }
-            }
-        }
-
-        sum
-    }
-
-    pub fn traits(&self) -> Vec<Trait> {
-        let mut traits = HashSet::new();
-
-        for sigil in &self.sigils {
-            let (t1, _) = sigil.trait1;
-            traits.insert(t1);
-            if let Some((t2, _)) = sigil.trait2 {
-                traits.insert(t2);
-            }
-        }
-
-        if let Some(Wrightstone {
-            trait1,
-            trait2,
-            trait3,
-        }) = &self.wrightstone
-        {
-            let (t1, _) = trait1;
-            traits.insert(*t1);
-
-            if let Some((t2, _)) = trait2 {
-                traits.insert(*t2);
-            }
-
-            if let Some((t3, _)) = trait3 {
-                traits.insert(*t3);
-            }
-        }
-
-        traits.iter().copied().collect()
-    }
-
-    pub fn total_trait_level(&self) -> u16 {
-        self.traits().into_iter().map(|t| self.trait_level(t)).sum()
+impl Trait {
+    pub fn new(kind: TraitKind, level: u8) -> Self {
+        Trait { kind, level }
     }
 }
 
-impl Sigil {
-    pub fn new_single(trait1: Trait, level: u8) -> Self {
-        Sigil {
-            trait1: (trait1, level),
-            trait2: None,
+impl TraitSet {
+    pub fn new() -> Self {
+        TraitSet {
+            traits: HashMap::new(),
         }
+    }
+
+    pub fn add(&mut self, t: Trait) {
+        self.traits
+            .entry(t.kind)
+            .and_modify(|l| *l += t.level as u16)
+            .or_insert(t.level as u16);
+    }
+
+    pub fn level(&self, kind: TraitKind) -> u16 {
+        self.traits.get(&kind).copied().unwrap_or(0)
+    }
+
+    pub fn contains(&self, kind: TraitKind) -> bool {
+        self.traits.contains_key(&kind)
+    }
+
+    pub fn is_superset_of(&self, other: &TraitSet) -> bool {
+        other.iter().all(|(desired_k, desired_l)| {
+            self.traits.get(desired_k).is_some_and(|l| l >= desired_l)
+        })
+    }
+
+    pub fn iter(&self) -> HashMapIter<'_, TraitKind, u16> {
+        self.traits.iter()
     }
 }
 
-impl Display for Sigil {
+impl From<HashMap<TraitKind, u16>> for TraitSet {
+    fn from(value: HashMap<TraitKind, u16>) -> Self {
+        TraitSet { traits: value }
+    }
+}
+
+impl FromIterator<Trait> for TraitSet {
+    fn from_iter<T: IntoIterator<Item = Trait>>(iter: T) -> Self {
+        let mut traits = TraitSet::new();
+        for t in iter {
+            traits.add(t);
+        }
+        traits
+    }
+}
+
+impl Display for Trait {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let (t1, l1) = self.trait1;
-        if let Some((t2, l2)) = self.trait2 {
-            write!(f, "[{t1:?} {l1} + {t2:?} {l2}]")
-        } else {
-            write!(f, "[{t1:?} {l1}]")
-        }
+        write!(f, "{:?} {}", self.kind, self.level)
     }
 }
 
-impl Display for Wrightstone {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let (t1, l1) = self.trait1;
-        write!(f, "[{t1:?} {l1}")?;
-        if let Some((t2, l2)) = self.trait2 {
-            write!(f, " + {t2:?} {l2}")?;
-        }
-        if let Some((t3, l3)) = self.trait3 {
-            write!(f, " + {t3:?} {l3}")?;
-        }
-        write!(f, "]")
-    }
-}
-
-impl FromStr for Trait {
+impl FromStr for TraitKind {
     type Err = &'static str;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        use Trait::*;
+        use TraitKind::*;
         match s {
             "Aegis" => Ok(Aegis),
             "Alpha" => Ok(Alpha),

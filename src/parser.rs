@@ -7,7 +7,7 @@ use nom::{
     IResult,
 };
 
-use gbfr_build_calculator::model::{SearchQuery, Sigil, Trait, Wrightstone};
+use gbfr_build_calculator::model::{SearchQuery, Sigil, Trait, TraitKind, Wrightstone};
 
 pub fn parse_sigils(input: &str) -> IResult<&str, Vec<Sigil>> {
     separated_list0(tag("\n"), sigil)(input)
@@ -34,17 +34,23 @@ pub fn parse_query(input: &str) -> IResult<&str, SearchQuery> {
 fn sigil(input: &str) -> IResult<&str, Sigil> {
     let comma = tag(",");
 
-    let (input, trait1) = trait_name(input)?;
+    let (input, trait1) = trait_kind(input)?;
     let (input, _) = comma(input)?;
     let (input, level1) = number(input)?;
     let (input, _) = comma(input)?;
-    let (input, trait2) = opt(trait_name)(input)?;
+    let (input, trait2) = opt(trait_kind)(input)?;
     let (input, _) = comma(input)?;
     let (input, level2) = opt(number)(input)?;
 
-    let trait1 = (trait1, level1);
+    let trait1 = Trait {
+        kind: trait1,
+        level: level1,
+    };
     let trait2 = if trait2.is_some() && level2.is_some() {
-        Some((trait2.unwrap(), level2.unwrap()))
+        Some(Trait {
+            kind: trait2.unwrap(),
+            level: level2.unwrap(),
+        })
     } else {
         None
     };
@@ -56,26 +62,36 @@ fn sigil(input: &str) -> IResult<&str, Sigil> {
 fn wrightstone(input: &str) -> IResult<&str, Wrightstone> {
     let comma = tag(",");
 
-    let (input, trait1) = trait_name(input)?;
+    let (input, trait1) = trait_kind(input)?;
     let (input, _) = comma(input)?;
     let (input, level1) = number(input)?;
     let (input, _) = comma(input)?;
-    let (input, trait2) = opt(trait_name)(input)?;
+    let (input, trait2) = opt(trait_kind)(input)?;
     let (input, _) = comma(input)?;
     let (input, level2) = opt(number)(input)?;
     let (input, _) = comma(input)?;
-    let (input, trait3) = opt(trait_name)(input)?;
+    let (input, trait3) = opt(trait_kind)(input)?;
     let (input, _) = comma(input)?;
     let (input, level3) = opt(number)(input)?;
 
-    let trait1 = (trait1, level1);
+    // let trait1 = (trait1, level1);
+    let trait1 = Trait {
+        kind: trait1,
+        level: level1,
+    };
     let trait2 = if trait2.is_some() && level2.is_some() {
-        Some((trait2.unwrap(), level2.unwrap()))
+        Some(Trait {
+            kind: trait2.unwrap(),
+            level: level2.unwrap(),
+        })
     } else {
         None
     };
     let trait3 = if trait3.is_some() && level3.is_some() {
-        Some((trait3.unwrap(), level3.unwrap()))
+        Some(Trait {
+            kind: trait3.unwrap(),
+            level: level3.unwrap(),
+        })
     } else {
         None
     };
@@ -88,20 +104,24 @@ fn wrightstone(input: &str) -> IResult<&str, Wrightstone> {
     Ok((input, wrightstone))
 }
 
-fn query_trait(input: &str) -> IResult<&str, (Trait, u8)> {
+fn query_trait(input: &str) -> IResult<&str, Trait> {
     let comma = tag(",");
 
-    let (input, trait1) = trait_name(input)?;
+    let (input, trait1) = trait_kind(input)?;
     let (input, _) = comma(input)?;
     let (input, level1) = number(input)?;
 
-    Ok((input, (trait1, level1)))
+    let trait1 = Trait {
+        kind: trait1,
+        level: level1,
+    };
+    Ok((input, trait1))
 }
 
-fn trait_name(input: &str) -> IResult<&str, Trait> {
+fn trait_kind(input: &str) -> IResult<&str, TraitKind> {
     map_res(
         recognize(many0(alt((alpha1, space1, tag("\'"))))),
-        |s: &str| s.parse::<Trait>(),
+        |s: &str| s.parse::<TraitKind>(),
     )(input)
 }
 
@@ -109,21 +129,30 @@ fn number(input: &str) -> IResult<&str, u8> {
     nom::character::complete::u8(input)
 }
 
-// fn comma<'a>(input: &'a str) -> impl Fn(&'a str) -> IResult<&'a str, &'a str> {
-//     tag(",")
-// }
-
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
+    use gbfr_build_calculator::model::TraitSet;
+    use TraitKind as TK;
 
     use super::*;
+
+    // macro_rules! _trait {
+    //     ($kind:ident, $level:expr) => {
+    //         Trait {
+    //             kind: $kind,
+    //             level:
+    //         }
+    //     };
+    // }
 
     #[test]
     fn one_sigil_single_trait() {
         let input = "Aegis,15,,";
         let expected = vec![Sigil {
-            trait1: (Trait::Aegis, 15),
+            trait1: Trait {
+                kind: TraitKind::Aegis,
+                level: 15,
+            },
             trait2: None,
         }];
 
@@ -136,8 +165,14 @@ mod tests {
     fn one_sigil_double_trait() {
         let input = "Alpha,12,DMG Cap,12";
         let expected = vec![Sigil {
-            trait1: (Trait::Alpha, 12),
-            trait2: Some((Trait::DMGCap, 12)),
+            trait1: Trait {
+                kind: TraitKind::Alpha,
+                level: 12,
+            },
+            trait2: Some(Trait {
+                kind: TraitKind::DMGCap,
+                level: 12,
+            }),
         }];
 
         let (_, parsed) = parse_sigils(input).unwrap();
@@ -152,12 +187,21 @@ mod tests {
 
         let expected = vec![
             Sigil {
-                trait1: (Trait::Aegis, 15),
+                trait1: Trait {
+                    kind: TraitKind::Aegis,
+                    level: 15,
+                },
                 trait2: None,
             },
             Sigil {
-                trait1: (Trait::Alpha, 12),
-                trait2: Some((Trait::DMGCap, 12)),
+                trait1: Trait {
+                    kind: TraitKind::Alpha,
+                    level: 12,
+                },
+                trait2: Some(Trait {
+                    kind: TraitKind::DMGCap,
+                    level: 12,
+                }),
             },
         ];
 
@@ -173,12 +217,12 @@ mod tests {
 
         let expected = vec![
             Wrightstone {
-                trait1: (Trait::CriticalHitRate, 10),
-                trait2: Some((Trait::HP, 6)),
-                trait3: Some((Trait::Uplift, 3)),
+                trait1: Trait::new(TK::CriticalHitRate, 10),
+                trait2: Some(Trait::new(TK::HP, 6)),
+                trait3: Some(Trait::new(TK::Uplift, 3)),
             },
             Wrightstone {
-                trait1: (Trait::StunPower, 2),
+                trait1: Trait::new(TK::StunPower, 2),
                 trait2: None,
                 trait3: None,
             },
@@ -194,8 +238,11 @@ mod tests {
         let input = "5\n\
         DMG Cap,15";
 
+        let mut desired_traits = TraitSet::new();
+        desired_traits.add(Trait::new(TK::DMGCap, 15));
+
         let expected = SearchQuery {
-            desired_traits: HashMap::from([(Trait::DMGCap, 15)]),
+            desired_traits,
             sigil_slots: 5,
         };
 
